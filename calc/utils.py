@@ -138,7 +138,7 @@ def latex(ctx, expression):
     parsed = parse(ctx, tokenize(ctx, expression))
     return _latex(parsed, braces=False)
 
-def latex_to_image(tex, dpi=200, fgcolor='white', transparent=True):
+def latex_to_image(tex, dpi=200, color='white', transparent=True):
     tex_template = r"""
     \def\formula{%s}
     \documentclass[border=2pt]{standalone}
@@ -152,7 +152,7 @@ def latex_to_image(tex, dpi=200, fgcolor='white', transparent=True):
     \end{varwidth}
     \end{document}
     """
-    pdf = build_pdf(tex_template % (tex, fgcolor))
+    pdf = build_pdf(tex_template % (tex, color))
     images = convert_from_bytes(
         bytes(pdf),
         dpi=dpi,
