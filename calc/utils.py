@@ -22,7 +22,7 @@ from .tokenizer import tokenize
 
 mpl.rcParams.update(mpl.rcParamsDefault)
 # plt.rc('font', family='Cambria-Math')
-plt.rc('text', color='white', usetex=True)
+plt.rc('text', color='white')
 plt.rc('axes', facecolor='none', edgecolor='none',
        labelsize=28, titlesize=32, labelcolor='white',
        axisbelow=True, grid=True)
@@ -105,6 +105,7 @@ def graph(ctx:Context, func, xlow=-10, xhigh=10, ylow=None, yhigh=None, n=1000, 
             raise TypeError("{} is not 1-dimensional (function must take 1 input and return 1 output).".format(func.definition))
         y[i] = float(result)
 
+    mpl.rc('text', usetex=tex_title)
     fig, ax = plt.subplots(1, 1)
 
     ax.axhline(0, color='#202225', lw=6)
