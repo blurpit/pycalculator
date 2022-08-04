@@ -115,7 +115,7 @@ def graph(ctx:Context, func, xlow=-10, xhigh=10, ylow=None, yhigh=None, n=1000, 
     if ylow is not None and yhigh is not None:
         ax.set_ylim(ylow, yhigh)
     ax.set_xlabel(str(func.definition.args[0]))
-    ax.set_ylabel(str(func.definition))
+    ax.set_ylabel(str(func.definition.signature))
     if tex_title:
         ax.set_title('$${}$$'.format(func.latex()))
     else:

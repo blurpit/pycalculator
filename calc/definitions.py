@@ -17,6 +17,10 @@ class FunctionDefinition:
     def is_func_arg(self, index):
         return index in self.f_args
 
+    @property
+    def signature(self):
+        return '{}({})'.format(self.name, ','.join(map(str, self.args)))
+
     def __str__(self):
         return self.make_str(self.args)
 
