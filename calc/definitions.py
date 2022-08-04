@@ -22,6 +22,8 @@ class FunctionDefinition:
 
     def make_str(self, inputs, bracketed=False):
         if inputs:
+            if isinstance(self.func, CustomFunction):
+                return str(self.func)
             return '{}({})'.format(self.name, ','.join(map(str, inputs)))
         else:
             return self.name
@@ -31,6 +33,8 @@ class FunctionDefinition:
 
     def make_latex(self, inputs, bracketed=False):
         if inputs:
+            if isinstance(self.func, CustomFunction):
+                return _latex(self.func)
             return self.name + r'\left(' + ','.join(map(_latex, inputs)) + r'\right)'
         else:
             return self.name

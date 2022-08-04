@@ -139,8 +139,6 @@ def latex(ctx, expression):
         expression = expression.replace(' ', '')
         if expression in ctx:
             parsed = ctx.get(expression)
-            if isinstance(parsed, FunctionDefinition) and isinstance(parsed.func, CustomFunction):
-                parsed = parsed.func
         else:
             parsed = parse(ctx, tokenize(ctx, expression))
     else:
