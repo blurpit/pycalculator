@@ -173,11 +173,14 @@ def load_contexts(ctx, fp):
         contexts = json.load(file)
     for element in contexts:
         ctx.push_context()
-        for expression in element.values():
+        for name, expression in element.items():
             expression = expression.replace(' ', '')
             tokens = tokenize(ctx, expression)
             parsed = parse(ctx, tokens)
-            ctx.add(parsed)
+            if isinstance(parsed, (float, int)):
+                ctx.set(name, parsed)
+            else:
+                ctx.add(parsed)
 
 def save_contexts(ctx, fp):
     """
