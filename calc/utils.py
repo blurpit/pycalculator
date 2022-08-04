@@ -135,8 +135,16 @@ def savefig_png(fig, path):
     fig.savefig(path, format='png', bbox_inches='tight')
 
 def latex(ctx, expression):
-    expression = expression.replace(' ', '')
-    parsed = parse(ctx, tokenize(ctx, expression))
+    if isinstance(expression, str):
+        expression = expression.replace(' ', '')
+        if expression in ctx:
+            parsed = ctx.get(expression)
+            if isinstance(parsed, FunctionDefinition) and isinstance(parsed.func, CustomFunction):
+                parsed = parsed.func
+        else:
+            parsed = parse(ctx, tokenize(ctx, expression))
+    else:
+        parsed = expression
     return _latex(parsed, braces=False)
 
 def latex_to_image(tex, dpi=200, color='white', transparent=True):
