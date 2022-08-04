@@ -49,7 +49,7 @@ def parse(ctx:Context, tokens):
         elif len(definition.args) > 0:
             if len(output) < 1:
                 raise SyntaxError("{} expected {} argument(s), but {} were given."
-                                  .format(definition, len(definition.args), 0))
+                                  .format(definition.signature, len(definition.args), 0))
             inputs = parse_operand(ctx, output.pop())
             output.append(Function(ctx, definition, inputs))
 

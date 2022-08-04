@@ -68,6 +68,10 @@ class BinaryOperatorDefinition(FunctionDefinition):
     def __init__(self, name, func, precedence, associativity):
         super().__init__(name, ['a', 'b'], func, precedence, associativity)
 
+    @property
+    def signature(self):
+        return str(self)
+
     def make_str(self, inputs, bracketed=False):
         s = '{}{}{}'.format(inputs[0], self.name, inputs[1])
         if bracketed:
@@ -150,21 +154,21 @@ class Function:
         if len(self.inputs) != len(self.definition.args):
             raise SyntaxError(
                 "{} expected {} argument(s), but {} were given."
-                .format(self.definition, len(self.definition.args), len(self.inputs))
+                .format(self.definition.signature, len(self.definition.args), len(self.inputs))
             )
 
         for (i, arg_count) in self.definition.f_args.items():
             if not isinstance(self.inputs[i], _eval_time_funcs):
                 raise SyntaxError(
                     "Argument '{}' of {} must be a function, not {}."
-                    .format(self.definition.args[i], self.definition, self.inputs[i])
+                    .format(self.definition.args[i], self.definition.signature, self.inputs[i])
                 )
 
             in_arg_count = len(self.inputs[i].definition.args)
             if in_arg_count != arg_count:
                 raise SyntaxError(
                     "Argument '{}' of {} expected a function that takes {} argument(s), but {} takes {}."
-                    .format(self.definition.args[i], self.definition, arg_count, self.inputs[i].definition, in_arg_count)
+                    .format(self.definition.args[i], self.definition.signature, arg_count, self.inputs[i].definition.signature, in_arg_count)
                 )
 
     def __str__(self):
@@ -204,7 +208,7 @@ class CustomFunction:
     def __call__(self, *inputs):
         if len(inputs) != len(self.definition.args):
             raise SyntaxError("{} expected {} argument(s), but {} were given."
-                              .format(self.definition, len(self.definition.args), len(inputs)))
+                              .format(self.definition.signature, len(self.definition.args), len(inputs)))
         with self.ctx.with_context():
             for arg, val in zip(self.definition.args, inputs):
                 self.ctx.set(arg, val)
@@ -214,7 +218,7 @@ class CustomFunction:
                 return self.definition.func
 
     def __str__(self):
-        return '{} = {}'.format(self.definition, self.definition.func)
+        return '{} = {}'.format(self.definition.signature, self.definition.func)
 
     def __repr__(self):
         return str(self)
@@ -229,11 +233,11 @@ class FunctionArgument:
     def __call__(self, *inputs):
         if len(inputs) != len(self.definition.args):
             raise SyntaxError("{} expected {} argument(s), but {} were given."
-                              .format(self.definition, len(self.definition.args), len(inputs)))
+                              .format(self.definition.signature, len(self.definition.args), len(inputs)))
         return self.definition.func(*inputs)
 
     def __str__(self):
-        return str(self.definition)
+        return self.definition.signature
 
     def __repr__(self):
         return str(self)

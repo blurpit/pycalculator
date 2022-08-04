@@ -94,7 +94,7 @@ def graph(ctx:Context, func, xlow=-10, xhigh=10, ylow=None, yhigh=None, n=1000, 
     elif not isinstance(func, _eval_time_funcs):
         raise TypeError("Cannot graph type '{}', must be a function.".format(func.__class__.__name__))
     if len(func.definition.args) != 1:
-        raise TypeError("{} is not 1-dimensional (function must take 1 input and return 1 output).".format(func.definition))
+        raise TypeError("{} is not 1-dimensional (function must take 1 input and return 1 output).".format(func.definition.signature))
 
     x = np.linspace(xlow, xhigh, n)
     y = np.empty(len(x))
@@ -102,7 +102,7 @@ def graph(ctx:Context, func, xlow=-10, xhigh=10, ylow=None, yhigh=None, n=1000, 
     for i in range(len(x)):
         result = func(x[i])
         if not isinstance(result, (float, int)):
-            raise TypeError("{} is not 1-dimensional (function must take 1 input and return 1 output).".format(func.definition))
+            raise TypeError("{} is not 1-dimensional (function must take 1 input and return 1 output).".format(func.definition.signature))
         y[i] = float(result)
 
     mpl.rc('text', usetex=tex_title)
