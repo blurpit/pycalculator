@@ -1,0 +1,11 @@
+[project]
+name = "blurpit-calc"
+authors = [
+    { name="blurpit" }
+]
+description = "Calculator library that evaluates expressions, outputs & renders LaTeX, and graphs functions."
+requires-python = ">=3.9"
+[build-system]
+requires = ["numpy", "scipy", "matplotlib", "latex", "pdf2image"]
+[project.urls]
+"Homepage" = "https://github.com/blurpit/pycalculator"
