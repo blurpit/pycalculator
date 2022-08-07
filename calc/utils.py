@@ -105,7 +105,6 @@ def graph(ctx:Context, func, xlow=-10, xhigh=10, ylow=None, yhigh=None, n=1000, 
             raise TypeError("{} is not 1-dimensional (function must take 1 input and return 1 output).".format(func.definition.signature))
         y[i] = float(result)
 
-    mpl.rc('text', usetex=tex_title)
     fig, ax = plt.subplots(1, 1)
 
     ax.axhline(0, color='#202225', lw=6)
@@ -117,7 +116,7 @@ def graph(ctx:Context, func, xlow=-10, xhigh=10, ylow=None, yhigh=None, n=1000, 
     ax.set_xlabel(str(func.definition.args[0]))
     ax.set_ylabel(str(func.definition.signature))
     if tex_title:
-        ax.set_title('$${}$$'.format(func.latex()))
+        ax.set_title('${}$'.format(func.latex()))
     else:
         ax.set_title(textwrap.fill(str(func), 48))
 
@@ -229,8 +228,6 @@ class MultiplicationDefinition(BinaryOperatorDefinition):
 class DivisionDefinition(BinaryOperatorDefinition):
     def make_latex(self, inputs, bracketed=False):
         s = r'\frac{' + _latex(inputs[0]) + '}{' + _latex(inputs[1]) + '}'
-        if bracketed:
-            s = self._add_tex_brackets(s)
         return s
 
 class RootDefinition(FunctionDefinition):

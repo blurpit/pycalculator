@@ -237,16 +237,13 @@ class FunctionArgument:
         return self.definition.func(*inputs)
 
     def __str__(self):
-        return self.definition.signature
+        return str(self.definition)
 
     def __repr__(self):
         return str(self)
 
     def latex(self):
-        if isinstance(self.definition.func, CustomFunction):
-            return _latex(self.definition.func.definition.func)
-        else:
-            return _latex(self.definition)
+        return _latex(self.definition)
 
 f_arg = namedtuple('f_arg', 'name arg_count')
 
