@@ -10,13 +10,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 from latex import build_pdf
 from pdf2image import convert_from_bytes
-from scipy.fftpack import fft
 from scipy.integrate import quad
 from scipy.misc import derivative
 
 from .context import Context
-from .definitions import FunctionDefinition, BinaryOperatorDefinition, Constant, Function, CustomFunction, f_arg, \
-    FunctionArgument, _parse_time_funcs, _eval_time_funcs, _latex, _latex_symbols
+from .definitions import FunctionDefinition, BinaryOperatorDefinition, Constant, Function, Matrix, Vector, \
+    CustomFunction, FunctionArgument, f_arg, _parse_time_funcs, _eval_time_funcs, _latex, _latex_symbols
 from .parser import parse
 from .tokenizer import tokenize
 
@@ -304,6 +303,12 @@ def integrate(f, a, b):
 def differentiate(f, x, n=1):
     return derivative(f, x, dx=1e-4, n=n)
 
+def id_mat(n):
+    return Matrix(*(
+        Vector(1 if j == i else 0 for j in range(n))
+        for i in range(n)
+    ))
+
 def cartesian_to_polar(x, y):
     return [hypot(x, y), math.atan2(y, x)]
 
@@ -401,6 +406,10 @@ def create_default_context():
         IntegralDefinition  ('int',    [f_arg('f', 1), 'a', 'b'], integrate),
         DerivativeDefinition('deriv',  [f_arg('f', 1), 'x'],      differentiate),
         DerivativeDefinition('nderiv', [f_arg('f', 1), 'x', 'n'], differentiate),
+
+        # Linear Algebra
+        FunctionDefinition('mat', 'v', Matrix, disable_arg_count_check=True),
+        FunctionDefinition('I', 'n', id_mat),
 
         # Coordinate System Conversion Functions
         FunctionDefinition('polar',  'xy',  cartesian_to_polar),

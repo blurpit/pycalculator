@@ -1,11 +1,13 @@
 from collections import namedtuple
 
+import numpy as np
+
 
 class FunctionDefinition:
     precedence = 2
     associativity = 1
 
-    def __init__(self, name, args, func, precedence=None, associativity=None):
+    def __init__(self, name, args, func, precedence=None, associativity=None, disable_arg_count_check=False):
         self.name = name
         self.args, self.f_args = self._get_args(args)
         self.func = func
@@ -13,6 +15,7 @@ class FunctionDefinition:
             self.precedence = precedence
         if associativity is not None:
             self.associativity = associativity
+        self.disable_arg_count_check = disable_arg_count_check
 
     def is_func_arg(self, index):
         return index in self.f_args
@@ -131,7 +134,7 @@ class Variable:
 class Function:
     def __init__(self, ctx, definition, inputs, bracketed=False):
         if not isinstance(inputs, list):
-            inputs = Vector(inputs)
+            inputs = [inputs]
         self.definition = definition
         self.inputs = inputs
         self.bracketed = bracketed
@@ -151,7 +154,7 @@ class Function:
             yield _eval_item(item)
 
     def _verify_inputs(self):
-        if len(self.inputs) != len(self.definition.args):
+        if not self.definition.disable_arg_count_check and len(self.inputs) != len(self.definition.args):
             raise SyntaxError(
                 "{} expected {} argument(s), but {} were given."
                 .format(self.definition.signature, len(self.definition.args), len(self.inputs))
@@ -191,15 +194,16 @@ class Vector(list):
         return Vector(_eval_item(item) for item in self)
 
     def __add__(self, other):
-        if isinstance(other, Vector):
-            if len(other) == len(self):
-                return Vector(a + b for a, b in zip(self, other))
+        if not isinstance(other, Vector):
+            raise TypeError("unsupported operand type(s) for +: 'Vector' and '{}'".format(type(other).__name__))
+        if len(other) != len(self):
             raise ValueError("can't add vectors of length {} and {}".format(len(self), len(other)))
+        return Vector(a + b for a, b in zip(self, other))
 
     def __mul__(self, other):
-        if isinstance(other, (float, int)):
-            return Vector(other * item for item in self)
-        raise TypeError("unsupported operand type(s) for *: 'Vector' and '{}'".format(type(other).__name__))
+        if not isinstance(other, (float, int)):
+            raise TypeError("unsupported operand type(s) for *: 'Vector' and '{}'".format(type(other).__name__))
+        return Vector(other * item for item in self)
 
     __radd__ = __add__
     __rmul__ = __mul__
@@ -208,7 +212,7 @@ class Vector(list):
         return r'\left[' + ','.join(map(_latex, self)) + r'\right]'
 
     def __str__(self):
-        return '<' + ', '.join(map(str, self)) + '>'
+        return '(' + ', '.join(map(str, self)) + ')'
 
     def __repr__(self):
         return str(self)
@@ -221,6 +225,60 @@ class Vector(list):
         if isinstance(b, Vector) and not b.bracketed: result.extend(b)
         else: result.append(b)
         return result
+
+class Matrix(list):
+    def __init__(self, *rows):
+        super().__init__(rows)
+        self._verify()
+        self.shape = Vector([len(self), len(self[0])])
+
+    def __call__(self):
+        return Matrix(col() for col in self)
+
+    def __add__(self, other):
+        if not isinstance(other, Matrix):
+            raise TypeError("unsupported operand type(s) for +: 'Matrix' and '{}'".format(type(other).__name__))
+        if self.shape != other.shape:
+            raise ValueError('Incompatible matrix addition shapes: {} and {}'.format(self.shape, other.shape))
+        for i in range(self.shape[0]):
+            for j in range(self.shape[1]):
+                self[i][j] += other[i][j]
+        return self
+
+    def __mul__(self, other):
+        if isinstance(other, (float, int)):
+            for i in range(self.shape[0]):
+                for j in range(self.shape[1]):
+                    self[i][j] *= other
+            return self
+        elif isinstance(other, Matrix):
+            if self.shape[1] != other.shape[0]:
+                raise ValueError('Incompatible matrix multiplication shapes: {} and {}'.format(self.shape, other.shape))
+            return Matrix(*(
+                Vector(row) for row in np.matmul(self, other)
+            ))
+        else:
+            raise TypeError("unsupported operand type(s) for *: 'Matrix' and '{}'".format(type(other).__name__))
+
+    __radd__ = __add__
+
+    def __str__(self):
+        return 'mat(' + ', '.join(map(str, self)) + ')'
+
+    def __repr__(self):
+        return str(self)
+
+    def _verify(self):
+        if len(self) < 1:
+            raise ValueError('Matrix must have at least 1 row')
+        for i, row in enumerate(self): # convert singletons to vectors
+            if not isinstance(row, Vector):
+                self[i] = Vector([row])
+        cols = len(self[0])
+        if any(len(row) != cols for row in self):
+            raise ValueError('Matrix row vectors must be the same length')
+        if cols < 1:
+            raise ValueError('Matrix must have at least 1 column')
 
 
 class CustomFunction:
@@ -272,7 +330,7 @@ f_arg = namedtuple('f_arg', 'name arg_count')
 
 # Represents function-like classes that have inputs and such supplied
 # at parse-time, and use __call__ with no arguments to evaluate.
-_parse_time_funcs = (Constant, Variable, Function, Vector)
+_parse_time_funcs = (Constant, Variable, Function, Vector, Matrix)
 # Represents function-like classes that have inputs and such not
 # defined until evaluation-time, and use __call__ to supply inputs
 # and evaluate.
