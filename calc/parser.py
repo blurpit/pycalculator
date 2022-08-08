@@ -1,6 +1,6 @@
 from .context import Context
 from .definitions import BinaryOperatorDefinition, FunctionDefinition, Function, FunctionArgument, \
-    CustomFunction, OutputList
+    CustomFunction, Vector
 from .tokenizer import tokenize
 
 
@@ -37,7 +37,7 @@ def parse(ctx:Context, tokens):
             left = parse_operand(ctx, output.pop())
             if definition.name == ',':
                 # special case for , operator
-                output.append(OutputList.combine(left, right))
+                output.append(Vector.combine(left, right))
             else:
                 output.append(Function(ctx, definition, [left, right]))
 
@@ -100,6 +100,9 @@ def parse(ctx:Context, tokens):
                     and not inside_func \
                     and isinstance(token, str) \
                     and (not top or top.name != ','):
+                operand.bracketed = True
+
+            if isinstance(operand, Vector):
                 operand.bracketed = True
 
             if inside_func:

@@ -96,7 +96,7 @@ def graph(ctx:Context, func, xlow=-10, xhigh=10, ylow=None, yhigh=None, n=1000, 
         definition = FunctionDefinition('f', 'x', func)
         func = CustomFunction(ctx, definition)
     elif not isinstance(func, _eval_time_funcs):
-        raise TypeError("Cannot graph type '{}', must be a function.".format(func.__class__.__name__))
+        raise TypeError("Cannot graph type '{}', must be a function.".format(type(func).__name__))
     if len(func.definition.args) != 1:
         raise TypeError("{} is not 1-dimensional (function must take 1 input and return 1 output).".format(func.definition.signature))
 

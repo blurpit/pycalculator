@@ -131,7 +131,7 @@ class Variable:
 class Function:
     def __init__(self, ctx, definition, inputs, bracketed=False):
         if not isinstance(inputs, list):
-            inputs = OutputList(inputs)
+            inputs = Vector(inputs)
         self.definition = definition
         self.inputs = inputs
         self.bracketed = bracketed
@@ -180,25 +180,48 @@ class Function:
     def latex(self):
         return self.definition.make_latex(self.inputs, self.bracketed)
 
-class OutputList(list):
-    def __init__(self, *items):
+class Vector(list):
+    def __init__(self, items=None):
+        if items is None:
+            items = []
         super().__init__(items)
+        self.bracketed = False
 
     def __call__(self):
-        return [_eval_item(item) for item in self]
+        return Vector(_eval_item(item) for item in self)
+
+    def __add__(self, other):
+        if isinstance(other, Vector):
+            if len(other) == len(self):
+                return Vector(a + b for a, b in zip(self, other))
+            raise ValueError("can't add vectors of length {} and {}".format(len(self), len(other)))
+
+    def __mul__(self, other):
+        if isinstance(other, (float, int)):
+            return Vector(other * item for item in self)
+        raise TypeError("unsupported operand type(s) for *: 'Vector' and '{}'".format(type(other).__name__))
+
+    __radd__ = __add__
+    __rmul__ = __mul__
 
     def latex(self):
         return r'\left[' + ','.join(map(_latex, self)) + r'\right]'
 
+    def __str__(self):
+        return '<' + ', '.join(map(str, self)) + '>'
+
+    def __repr__(self):
+        return str(self)
+
     @staticmethod
-    def combine(*items):
-        result = OutputList()
-        for item in items:
-            if isinstance(item, list):
-                result.extend(item)
-            else:
-                result.append(item)
+    def combine(a, b):
+        result = Vector()
+        if isinstance(a, Vector) and not a.bracketed: result.extend(a)
+        else: result.append(a)
+        if isinstance(b, Vector) and not b.bracketed: result.extend(b)
+        else: result.append(b)
         return result
+
 
 class CustomFunction:
     def __init__(self, ctx, definition):
@@ -249,7 +272,7 @@ f_arg = namedtuple('f_arg', 'name arg_count')
 
 # Represents function-like classes that have inputs and such supplied
 # at parse-time, and use __call__ with no arguments to evaluate.
-_parse_time_funcs = (Constant, Variable, OutputList, Function)
+_parse_time_funcs = (Constant, Variable, Function, Vector)
 # Represents function-like classes that have inputs and such not
 # defined until evaluation-time, and use __call__ to supply inputs
 # and evaluate.
