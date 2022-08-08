@@ -88,7 +88,10 @@ def graph(ctx:Context, func, xlow=-10, xhigh=10, ylow=None, yhigh=None, n=1000, 
             tokens = tokenize(ctx, expression)
             func = parse(ctx, tokens)
     if isinstance(func, FunctionDefinition):
-        func = FunctionArgument(func)
+        if isinstance(func.func, CustomFunction):
+            func = func.func
+        else:
+            func = FunctionArgument(func)
     elif isinstance(func, _parse_time_funcs):
         definition = FunctionDefinition('f', 'x', func)
         func = CustomFunction(ctx, definition)

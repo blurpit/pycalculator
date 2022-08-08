@@ -58,9 +58,12 @@ def parse(ctx:Context, tokens):
             output.append(Function(ctx, definition, []))
 
     # Check whether this expression is defining a new function
-    new_func_definition = len(tokens) >= 2 and tokens[1] == '=' and tokens[0]
+    new_func_definition = tokens[0] if len(tokens) >= 2 and tokens[1] == '=' else None
     if new_func_definition:
         del tokens[:2]
+        ctx.push_context() # Push args to context so they are defined
+        for arg in new_func_definition.args:
+            ctx.set(arg, 0)
 
     # Check tokens are not empty
     if not tokens:
@@ -121,6 +124,7 @@ def parse(ctx:Context, tokens):
 
     output = output[0]
     if new_func_definition:
+        ctx.pop_context()
         new_func_definition.func = output
         output = CustomFunction(ctx, new_func_definition)
 
