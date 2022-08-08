@@ -21,8 +21,9 @@ from .parser import parse
 from .tokenizer import tokenize
 
 mpl.rcParams.update(mpl.rcParamsDefault)
-# plt.rc('font', family='Cambria-Math')
+plt.rc('font', family='serif')
 plt.rc('text', color='white')
+plt.rc('mathtext', fontset='dejavuserif')
 plt.rc('axes', facecolor='none', edgecolor='none',
        labelsize=28, titlesize=32, labelcolor='white',
        axisbelow=True, grid=True)
