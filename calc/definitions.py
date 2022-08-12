@@ -22,7 +22,7 @@ class FunctionDefinition:
 
     @property
     def signature(self):
-        return '{}({})'.format(self.name, ','.join(map(str, self.args)))
+        return '{}({})'.format(self.name, ', '.join(map(str, self.args)))
 
     def __str__(self):
         return self.make_str(self.args)
@@ -134,7 +134,7 @@ class Variable:
 class Function:
     def __init__(self, ctx, definition, inputs, bracketed=False):
         if not isinstance(inputs, list):
-            inputs = [inputs]
+            inputs = Vector([inputs])
         self.definition = definition
         self.inputs = inputs
         self.bracketed = bracketed
@@ -197,7 +197,7 @@ class Vector(list):
         if not isinstance(other, Vector):
             raise TypeError("unsupported operand type(s) for +: 'Vector' and '{}'".format(type(other).__name__))
         if len(other) != len(self):
-            raise ValueError("can't add vectors of length {} and {}".format(len(self), len(other)))
+            raise ValueError("Vector addition undefined for vectors of length {} and {}".format(len(self), len(other)))
         return Vector(a + b for a, b in zip(self, other))
 
     def __mul__(self, other):
@@ -209,7 +209,8 @@ class Vector(list):
     __rmul__ = __mul__
 
     def latex(self):
-        return r'\left[' + ','.join(map(_latex, self)) + r'\right]'
+        return r'\begin{bmatrix}' + r'\\'.join(map(_latex, self)) + r'\end{bmatrix}'
+        # return r'\left[' + ','.join(map(_latex, self)) + r'\right]'
 
     def __str__(self):
         return '(' + ', '.join(map(str, self)) + ')'
@@ -227,10 +228,9 @@ class Vector(list):
         return result
 
 class Matrix(list):
-    def __init__(self, *rows):
+    def __init__(self, rows):
         super().__init__(rows)
-        self._verify()
-        self.shape = Vector([len(self), len(self[0])])
+        self.shape = self._verify()
 
     def __call__(self):
         return Matrix(col() for col in self)
@@ -254,13 +254,17 @@ class Matrix(list):
         elif isinstance(other, Matrix):
             if self.shape[1] != other.shape[0]:
                 raise ValueError('Incompatible matrix multiplication shapes: {} and {}'.format(self.shape, other.shape))
-            return Matrix(*(
+            return Matrix(
                 Vector(row) for row in np.matmul(self, other)
-            ))
+            )
         else:
             raise TypeError("unsupported operand type(s) for *: 'Matrix' and '{}'".format(type(other).__name__))
 
     __radd__ = __add__
+
+    def latex(self):
+        get_row = lambda r: '&'.join(map(_latex, r))
+        return r'\begin{bmatrix}' + r'\\'.join(map(get_row, self)) + r'\end{bmatrix}'
 
     def __str__(self):
         return 'mat(' + ', '.join(map(str, self)) + ')'
@@ -270,15 +274,14 @@ class Matrix(list):
 
     def _verify(self):
         if len(self) < 1:
-            raise ValueError('Matrix must have at least 1 row')
+            return 0, 0
         for i, row in enumerate(self): # convert singletons to vectors
             if not isinstance(row, Vector):
                 self[i] = Vector([row])
         cols = len(self[0])
         if any(len(row) != cols for row in self):
             raise ValueError('Matrix row vectors must be the same length')
-        if cols < 1:
-            raise ValueError('Matrix must have at least 1 column')
+        return len(self), cols
 
 
 class CustomFunction:
@@ -345,6 +348,9 @@ def _eval_item(item):
 
 def _latex(item, braces=True):
     if isinstance(item, (int, float)):
+        item = round(item, 6)
+        if item % 1 == 0:
+            item = int(item)
         item = str(item)
     elif isinstance(item, str):
         item = _latex_symbols.get(item, item)

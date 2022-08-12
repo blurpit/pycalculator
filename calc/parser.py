@@ -33,8 +33,8 @@ def parse(ctx:Context, tokens):
         if isinstance(definition, BinaryOperatorDefinition):
             if len(output) < 2:
                 raise SyntaxError("Not enough operands for binary operator '{}'.".format(definition.name))
-            right = parse_operand(ctx, output.pop())
-            left = parse_operand(ctx, output.pop())
+            right = output.pop()
+            left = output.pop()
             if definition.name == ',':
                 # special case for , operator
                 output.append(Vector.combine(left, right))
@@ -50,7 +50,7 @@ def parse(ctx:Context, tokens):
             if len(output) < 1:
                 raise SyntaxError("{} expected {} argument(s), but {} were given."
                                   .format(definition.signature, len(definition.args), 0))
-            inputs = parse_operand(ctx, output.pop())
+            inputs = output.pop()
             output.append(Function(ctx, definition, inputs))
 
         # Zero-input function

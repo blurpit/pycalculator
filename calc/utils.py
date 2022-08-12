@@ -8,10 +8,9 @@ from random import random
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy as sp
 from latex import build_pdf
 from pdf2image import convert_from_bytes
-from scipy.integrate import quad
-from scipy.misc import derivative
 
 from .context import Context
 from .definitions import FunctionDefinition, BinaryOperatorDefinition, Constant, Function, Matrix, Vector, \
@@ -284,6 +283,14 @@ class DerivativeDefinition(FunctionDefinition):
                + r'}\Bigr|_{' + dx + r'=' + _latex(inputs[1]) \
                + r'}{\left[' + func + r'\right]}'
 
+class MatrixDefinition(FunctionDefinition):
+    def make_latex(self, inputs, bracketed=False):
+        return Matrix.latex(inputs)
+
+class VectorDefinition(FunctionDefinition):
+    def make_latex(self, inputs, bracketed=False):
+        return Vector.latex(inputs)
+
 
 golden = 1.618033988749895 # golden ratio (1+√5)/2
 _sqrt5 = math.sqrt(5)
@@ -298,16 +305,89 @@ def fibonacci(n):
     return int((golden**n - (-golden)**-n) / _sqrt5)
 
 def integrate(f, a, b):
-    return quad(f, a, b)[0]
+    return sp.quad(f, a, b)[0]
 
 def differentiate(f, x, n=1):
-    return derivative(f, x, dx=1e-4, n=n)
+    return sp.derivative(f, x, dx=1e-4, n=n)
 
 def id_mat(n):
-    return Matrix(*(
+    return Matrix(
         Vector(1 if j == i else 0 for j in range(n))
         for i in range(n)
-    ))
+    )
+
+def mat(*x):
+    return Matrix(x)
+
+def vec(*x):
+    return Vector(x)
+
+def dot_prod(v, w):
+    if len(v) != len(w):
+        raise ValueError('dot(v, w) is undefined for vectors of length {} and {}'.format(len(v), len(w)))
+    return sum(a * b for a, b in zip(v, w))
+
+def magnitude(v):
+    return math.sqrt(dot_prod(v, v))
+
+def normalize(v:Vector):
+    return v * (1 / magnitude(v))
+
+def shape(m):
+    if isinstance(m, Matrix):
+        return Vector(m.shape)
+    elif isinstance(m, Vector):
+        return Vector([len(m), 1])
+    raise TypeError("shape(M) takes a Matrix or a Vector, not '{}'".format(type(m).__name__))
+
+def determinant(m):
+    if not isinstance(m, Matrix):
+        raise TypeError("det(M) is takes a Matrix, not '{}'".format(type(m).__name__))
+    return sp.linalg.det(m)
+
+def rank(m):
+    if not isinstance(m, Matrix):
+        raise TypeError("rank(M) takes a Matrix, not '{}'".format(type(m).__name__))
+    return np.linalg.matrix_rank(m)
+
+def invert(m):
+    if not isinstance(m, Matrix):
+        raise TypeError("invert(M) takes a Matrix, not '{}'".format(type(m).__name__))
+    m = sp.linalg.inv(m)
+    return Matrix(Vector(col) for col in m)
+
+def kernel(m):
+    if not isinstance(m, Matrix):
+        raise TypeError("kernel(M) takes a Matrix, not '{}'".format(type(m).__name__))
+    m = sp.linalg.null_space(m)
+    return Matrix(Vector(col) for col in m)
+
+def echelon(m):
+    if not isinstance(m, Matrix):
+        raise TypeError("echelon(M) takes a Matrix, not '{}'".format(type(m).__name__))
+    raise NotImplementedError
+
+def rref(m):
+    if not isinstance(m, Matrix):
+        raise TypeError("rref(M) takes a Matrix, not '{}'".format(type(m).__name__))
+    raise NotImplementedError
+
+def lu(m):
+    if not isinstance(m, Matrix):
+        raise TypeError("lu(M) takes a Matrix, not '{}'".format(type(m).__name__))
+    l, u = sp.linalg.lu(m, permute_l=True)
+    l = Matrix(Vector(col) for col in l)
+    u = Matrix(Vector(col) for col in u)
+    return Vector([l, u])
+
+def svd(m):
+    if not isinstance(m, Matrix):
+        raise TypeError("svd(M) takes a Matrix, not '{}'".format(type(m).__name__))
+    u, s, v = sp.linalg.svd(m)
+    u = Matrix(Vector(col) for col in u)
+    s = Matrix(Vector(n if i == j else 0 for j in range(len(s))) for i, n in enumerate(s))
+    v = Matrix(Vector(col) for col in v)
+    return Vector([u, s, v])
 
 def cartesian_to_polar(x, y):
     return [hypot(x, y), math.atan2(y, x)]
@@ -408,8 +488,23 @@ def create_default_context():
         DerivativeDefinition('nderiv', [f_arg('f', 1), 'x', 'n'], differentiate),
 
         # Linear Algebra
-        FunctionDefinition('mat', 'v', Matrix, disable_arg_count_check=True),
+        MatrixDefinition('mat', 'v', mat, disable_arg_count_check=True),
+        VectorDefinition('v', 'x', vec, disable_arg_count_check=True),
         FunctionDefinition('I', 'n', id_mat),
+        FunctionDefinition('dot', 'vw', dot_prod),
+        FunctionDefinition('mag', 'v', magnitude),
+        FunctionDefinition('norm', 'v', normalize),
+        FunctionDefinition('shape', 'M', shape),
+        FunctionDefinition('det', 'M', determinant),
+        FunctionDefinition('rank', 'M', rank),
+        FunctionDefinition('inv', 'M', invert),
+        FunctionDefinition('kernel', 'M', kernel),
+        # FunctionDefinition('ech', 'M', echelon),
+        # FunctionDefinition('isech', 'M', is_echelon),
+        # FunctionDefinition('rref', 'M', rref),
+        # FunctionDefinition('isrref', 'M', is_rref),
+        FunctionDefinition('lu', 'M', lu),
+        FunctionDefinition('svd', 'M', svd),
 
         # Coordinate System Conversion Functions
         FunctionDefinition('polar',  'xy',  cartesian_to_polar),
