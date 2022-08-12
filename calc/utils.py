@@ -322,6 +322,26 @@ def mat(*x):
 def vec(*x):
     return Vector(x)
 
+def matrc(m, r, c):
+    if not isinstance(m, Matrix):
+        raise TypeError("mpos(m, r, c) takes a Matrix, not '{}'".format(type(m).__name__))
+    return m[r][c]
+
+def matr(m, r):
+    if not isinstance(m, Matrix):
+        raise TypeError("mrow(m, r) takes a Matrix, not '{}'".format(type(m).__name__))
+    return m[r]
+
+def matc(m, c):
+    if not isinstance(m, Matrix):
+        raise TypeError("mcol(m, c) takes a Matrix, not '{}'".format(type(m).__name__))
+    return Vector(m[i][c] for i in range(len(m)))
+
+def veci(v, i):
+    if not isinstance(v, Vector):
+        raise TypeError("vi(v, i) takes a Vector, not '{}'".format(type(v).__name__))
+    return v[i]
+
 def dot_prod(v, w):
     if len(v) != len(w):
         raise ValueError('dot(v, w) is undefined for vectors of length {} and {}'.format(len(v), len(w)))
@@ -487,7 +507,7 @@ def create_default_context():
         DerivativeDefinition('deriv',  [f_arg('f', 1), 'x'],      differentiate),
         DerivativeDefinition('nderiv', [f_arg('f', 1), 'x', 'n'], differentiate),
 
-        # Linear Algebra
+        # Vectors & Matrices
         MatrixDefinition('mat', 'v', mat, disable_arg_count_check=True),
         VectorDefinition('v', 'x', vec, disable_arg_count_check=True),
         FunctionDefinition('I', 'n', id_mat),
@@ -495,6 +515,12 @@ def create_default_context():
         FunctionDefinition('mag', 'v', magnitude),
         FunctionDefinition('norm', 'v', normalize),
         FunctionDefinition('shape', 'M', shape),
+        FunctionDefinition('mrow', 'Mr', matr),
+        FunctionDefinition('mcol', 'Mc', matc),
+        FunctionDefinition('mpos', 'Mrc', matrc),
+        FunctionDefinition('vi', 'vi', veci),
+
+        # Linear Algebra
         FunctionDefinition('det', 'M', determinant),
         FunctionDefinition('rank', 'M', rank),
         FunctionDefinition('inv', 'M', invert),
