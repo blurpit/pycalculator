@@ -296,64 +296,80 @@ golden = 1.618033988749895 # golden ratio (1+√5)/2
 _sqrt5 = math.sqrt(5)
 
 def hypot(x, y):
+    """ hypotenuse of right triangle with side lengths x and y """
     return math.sqrt(x*x + y*y)
 
 def binomial(n, x, p):
+    """ Probability of x Bernoulli trials with probability p being successful in n attempts """
     return math.comb(n, x) * pow(p, x) * pow(1-p, n-x)
 
 def fibonacci(n):
+    """ nth Fibonacci number """
     return int((golden**n - (-golden)**-n) / _sqrt5)
 
 def integrate(f, a, b):
+    """ Integral from a to b of f(x)dx """
     return sp.quad(f, a, b)[0]
 
 def differentiate(f, x, n=1):
+    """ nth derivative of f evaluated at x """
     return sp.derivative(f, x, dx=1e-4, n=n)
 
 def id_mat(n):
+    """ nxn identity matrix """
     return Matrix(
         Vector(1 if j == i else 0 for j in range(n))
         for i in range(n)
     )
 
 def mat(*x):
+    """ create a matrix """
     return Matrix(x)
 
 def vec(*x):
+    """ create a vector """
     return Vector(x)
 
 def matrc(m, r, c):
+    """ Value of a matrix at a position """
     if not isinstance(m, Matrix):
         raise TypeError("mpos(m, r, c) takes a Matrix, not '{}'".format(type(m).__name__))
     return m[r][c]
 
 def matr(m, r):
+    """ Matrix row vector """
     if not isinstance(m, Matrix):
         raise TypeError("mrow(m, r) takes a Matrix, not '{}'".format(type(m).__name__))
     return m[r]
 
 def matc(m, c):
+    """ Matrix column vector """
     if not isinstance(m, Matrix):
         raise TypeError("mcol(m, c) takes a Matrix, not '{}'".format(type(m).__name__))
     return Vector(m[i][c] for i in range(len(m)))
 
 def veci(v, i):
+    """ Value of a vector at index i """
     if not isinstance(v, Vector):
         raise TypeError("vi(v, i) takes a Vector, not '{}'".format(type(v).__name__))
     return v[i]
 
 def dot_prod(v, w):
+    """ Vector dot product """
     if len(v) != len(w):
         raise ValueError('dot(v, w) is undefined for vectors of length {} and {}'.format(len(v), len(w)))
     return sum(a * b for a, b in zip(v, w))
 
 def magnitude(v):
+    """ Vector length """
     return math.sqrt(dot_prod(v, v))
 
-def normalize(v:Vector):
+def normalize(v):
+    """ Normalized vector """
     return v * (1 / magnitude(v))
 
 def shape(m):
+    """ Matrix/vector shape """
     if isinstance(m, Matrix):
         return Vector(m.shape)
     elif isinstance(m, Vector):
@@ -361,38 +377,45 @@ def shape(m):
     raise TypeError("shape(M) takes a Matrix or a Vector, not '{}'".format(type(m).__name__))
 
 def determinant(m):
+    """ Matrix determinant """
     if not isinstance(m, Matrix):
         raise TypeError("det(M) is takes a Matrix, not '{}'".format(type(m).__name__))
     return sp.linalg.det(m)
 
 def rank(m):
+    """ Matrix rank """
     if not isinstance(m, Matrix):
         raise TypeError("rank(M) takes a Matrix, not '{}'".format(type(m).__name__))
     return np.linalg.matrix_rank(m)
 
 def invert(m):
+    """ Matrix inverse """
     if not isinstance(m, Matrix):
         raise TypeError("invert(M) takes a Matrix, not '{}'".format(type(m).__name__))
     m = sp.linalg.inv(m)
     return Matrix(Vector(col) for col in m)
 
 def kernel(m):
+    """ Matrix null space """
     if not isinstance(m, Matrix):
         raise TypeError("kernel(M) takes a Matrix, not '{}'".format(type(m).__name__))
     m = sp.linalg.null_space(m)
     return Matrix(Vector(col) for col in m)
 
 def echelon(m):
+    """ Matrix echelon form """
     if not isinstance(m, Matrix):
         raise TypeError("echelon(M) takes a Matrix, not '{}'".format(type(m).__name__))
     raise NotImplementedError
 
 def rref(m):
+    """ Matrix reduced echelon form """
     if not isinstance(m, Matrix):
         raise TypeError("rref(M) takes a Matrix, not '{}'".format(type(m).__name__))
     raise NotImplementedError
 
 def lu(m):
+    """ Matrix LU decomposition """
     if not isinstance(m, Matrix):
         raise TypeError("lu(M) takes a Matrix, not '{}'".format(type(m).__name__))
     l, u = sp.linalg.lu(m, permute_l=True)
@@ -401,6 +424,7 @@ def lu(m):
     return Vector([l, u], vertical=False)
 
 def svd(m):
+    """ Matrix SVD decomposition """
     if not isinstance(m, Matrix):
         raise TypeError("svd(M) takes a Matrix, not '{}'".format(type(m).__name__))
     u, s, v = sp.linalg.svd(m)
