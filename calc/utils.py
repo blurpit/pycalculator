@@ -378,7 +378,7 @@ def lu(m):
     l, u = sp.linalg.lu(m, permute_l=True)
     l = Matrix(Vector(col) for col in l)
     u = Matrix(Vector(col) for col in u)
-    return Vector([l, u])
+    return Vector([l, u], vertical=False)
 
 def svd(m):
     if not isinstance(m, Matrix):
@@ -387,7 +387,7 @@ def svd(m):
     u = Matrix(Vector(col) for col in u)
     s = Matrix(Vector(n if i == j else 0 for j in range(len(s))) for i, n in enumerate(s))
     v = Matrix(Vector(col) for col in v)
-    return Vector([u, s, v])
+    return Vector([u, s, v], vertical=False)
 
 def cartesian_to_polar(x, y):
     return [hypot(x, y), math.atan2(y, x)]

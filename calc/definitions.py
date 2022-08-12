@@ -184,11 +184,12 @@ class Function:
         return self.definition.make_latex(self.inputs, self.bracketed)
 
 class Vector(list):
-    def __init__(self, items=None):
+    def __init__(self, items=None, vertical=True):
         if items is None:
             items = []
         super().__init__(items)
         self.bracketed = False
+        self.vertical = vertical
 
     def __call__(self):
         return Vector(_eval_item(item) for item in self)
@@ -209,8 +210,10 @@ class Vector(list):
     __rmul__ = __mul__
 
     def latex(self):
-        return r'\begin{bmatrix}' + r'\\'.join(map(_latex, self)) + r'\end{bmatrix}'
-        # return r'\left[' + ','.join(map(_latex, self)) + r'\right]'
+        if self.vertical:
+            return r'\begin{bmatrix}' + r'\\'.join(map(_latex, self)) + r'\end{bmatrix}'
+        else:
+            return r'\left[' + ','.join(map(_latex, self)) + r'\right]'
 
     def __str__(self):
         return '(' + ', '.join(map(str, self)) + ')'
