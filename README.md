@@ -361,11 +361,11 @@ calc.evaluate(ctx, 'f(foo), g(foo)')
 | `randr(a, b)`     | Random between a and b         |
 
 #### Calculus
-| Definition        | Description                    |
-|-------------------|--------------------------------|
-| `int(f(_), a, b)` | Definite integral              |
-| `deriv(f(_), x)`  | Derivative evaluated at x      |
-| `nderiv(f(_), x)` | n-th Derivative evaluated at x |
+| Definition           | Description                    |
+|----------------------|--------------------------------|
+| `int(f(_), a, b)`    | Definite integral              |
+| `deriv(f(_), x)`     | Derivative evaluated at x      |
+| `nderiv(f(_), x, n)` | n-th Derivative evaluated at x |
 
 #### Vectors & Matrices
 | Definition      | Description                    |
