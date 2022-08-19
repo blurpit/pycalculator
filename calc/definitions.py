@@ -213,7 +213,7 @@ class Vector(list):
         if self.vertical:
             return r'\begin{bmatrix}' + r'\\'.join(map(_latex, self)) + r'\end{bmatrix}'
         else:
-            return r'\left[' + ','.join(map(_latex, self)) + r'\right]'
+            return ','.join(map(_latex, self))
 
     def __str__(self):
         return '(' + ', '.join(map(str, self)) + ')'

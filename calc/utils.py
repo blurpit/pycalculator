@@ -434,29 +434,29 @@ def svd(m):
     return Vector([u, s, v], vertical=False)
 
 def cartesian_to_polar(x, y):
-    return [hypot(x, y), math.atan2(y, x)]
+    return Vector([hypot(x, y), math.atan2(y, x)])
 
 def polar_to_cartesian(r, theta):
-    return [r*math.cos(theta), r*math.sin(theta)]
+    return Vector([r*math.cos(theta), r*math.sin(theta)])
 
 def cartesian_to_cylindrical(x, y, z):
-    return [hypot(x, y), math.atan2(y, x), z]
+    return Vector([hypot(x, y), math.atan2(y, x), z])
 
 def cartesian_to_spherical(x, y, z):
     r = math.sqrt(x*x + y*y + z*z)
-    return [r, math.atan2(y, x), math.acos(z/r)]
+    return Vector([r, math.atan2(y, x), math.acos(z/r)])
 
 def cylindrical_to_cartesian(rho, phi, z):
-    return [rho*math.cos(phi), rho*math.sin(phi), z]
+    return Vector([rho*math.cos(phi), rho*math.sin(phi), z])
 
 def cylindrical_to_spherical(rho, phi, z):
-    return [hypot(rho, z), phi, math.atan2(rho, z)]
+    return vec([hypot(rho, z), phi, math.atan2(rho, z)])
 
 def spherical_to_cartesian(r, theta, phi):
-    return [r*math.sin(phi)*math.cos(theta), r*math.sin(theta)*math.sin(phi), r*math.cos(phi)]
+    return Vector([r*math.sin(phi)*math.cos(theta), r*math.sin(theta)*math.sin(phi), r*math.cos(phi)])
 
 def spherical_to_cylindrical(r, theta, phi):
-    return [r*math.sin(phi), theta, r*math.cos(phi)]
+    return Vector([r*math.sin(phi), theta, r*math.cos(phi)])
 
 
 def create_default_context():
