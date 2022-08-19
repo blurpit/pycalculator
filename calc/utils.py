@@ -472,8 +472,8 @@ def create_default_context():
         Constant('inf', math.inf, '∞'),
 
         # Basic Binary Operators
-        BinaryOperatorDefinition('+', operator.add,     3, 0),
-        BinaryOperatorDefinition('-', operator.sub,     3, 0),
+        BinaryOperatorDefinition('+', operator.add,     4, 0),
+        BinaryOperatorDefinition('-', operator.sub,     4, 0),
         MultiplicationDefinition('*', operator.mul,     2, 0),
         DivisionDefinition      ('/', operator.truediv, 2, 0),
         BinaryOperatorDefinition('%', operator.mod,     2, 0),

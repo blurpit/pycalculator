@@ -4,7 +4,7 @@ import numpy as np
 
 
 class FunctionDefinition:
-    precedence = 2
+    precedence = 3
     associativity = 1
 
     def __init__(self, name, args, func, precedence=None, associativity=None, disable_arg_count_check=False):
