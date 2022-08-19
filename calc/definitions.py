@@ -265,6 +265,12 @@ class Matrix(list):
 
     __radd__ = __add__
 
+    def __rmul__(self, other):
+        if isinstance(other, Matrix):
+            return Matrix.__mul__(other, self)
+        else:
+            return Matrix.__mul__(self, other)
+
     def latex(self):
         get_row = lambda r: '&'.join(map(_latex, r))
         return r'\begin{bmatrix}' + r'\\'.join(map(get_row, self)) + r'\end{bmatrix}'
