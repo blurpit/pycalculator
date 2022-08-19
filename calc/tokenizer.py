@@ -163,7 +163,8 @@ def is_identifier(name):
 
 def add_implicit_mul(ctx, tokens):
     mul = ctx.get('*')
-    i = 1
+    i = 1 if len(tokens) < 3 or tokens[1] != '=' else 3 # skip func definition
+
     while i < len(tokens):
         curr = tokens[i]
         prev = tokens[i - 1]
@@ -173,7 +174,7 @@ def add_implicit_mul(ctx, tokens):
         i += 1
 
 def is_implicit_mul(prev, curr):
-    return prev != '=' \
-           and isinstance(prev, (int, float, str, _parse_time_funcs)) \
+    return (isinstance(prev, FunctionDefinition) and len(prev.args) == 0) \
+           or isinstance(prev, (int, float, str, _parse_time_funcs)) \
            and isinstance(curr, (str, FunctionDefinition, _parse_time_funcs)) \
            and not isinstance(curr, BinaryOperatorDefinition)
