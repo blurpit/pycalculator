@@ -43,25 +43,29 @@ calc.evaluate(ctx, 'ans*2')
 calc.evaluate(ctx, '2^1, 2^2, 2^3, 2^4, 2^5, 2^6')
 > (2, 4, 8, 16, 32, 64)
 
-# implicit multiplication is not implemented so don't try it.
+# implicit multiplication example
 calc.evaluate(ctx, '4(3+2)(6)')
-> SyntaxError: Leftover tokens [4, (3+2), 6] after evaluation. Make sure 
-all operators and functions have valid inputs.
+> 120
 ```
 
 ### Using functions
 ```py
-calc.evaluate(ctx, 'sin(2*pi/3), sqrt(3)/2')
+calc.evaluate(ctx, 'sin(2pi/3), sqrt(3)/2')
 > (0.8660254037844387, 0.8660254037844386)
 
 calc.evaluate(ctx, 'logb(3^9, 3)')
 > 9.0
+
+# Parentheses can be omitted, in which case functions 
+# have precedence between multiplication and addition.
+calc.evaluate(ctx, '1/2sin2/3pi^2+10')
+> 10.146111730949718
 ```
 
 ### Creating functions
 ```py
 # Defining a function using calc.evaluate() returns a CustomFunction object
-f = calc.evaluate('f(x) = x^2 + 3*x + 5')
+f = calc.evaluate('f(x) = x^2 + 3x + 5')
 f
 > f(x) = x^2+3*x+5
 
@@ -86,7 +90,7 @@ f(3, 2)
 Constants are treated as 0-argument functions, so they work similarly to defining a
 function as above.
 ```py
-foo = calc.evaluate(ctx, 'foo = 7*pi/3')
+foo = calc.evaluate(ctx, 'foo = 7pi/3')
 foo
 > foo = 7*π/3
 foo()
@@ -112,14 +116,14 @@ be defined inside the argument, or an existing function in the context can be re
 without calling it.
 ```py
 # defining the function inside an integral
-calc.evaluate(ctx, 'int(f(t)=2*t, 0, 5)')
+calc.evaluate(ctx, 'int(f(t)=2t, 0, 5)')
 > 25.0
 
 # referencing existing functions
-calc.evaluate(ctx, 'int(sin, 0, 3*pi/4)')
+calc.evaluate(ctx, 'int(sin, 0, 3pi/4)')
 > 1.7071067811865472
 
-f = calc.evaluate(ctx, 'f(t) = (t+2)*(t-3)')
+f = calc.evaluate(ctx, 'f(t) = (t+2)(t-3)')
 ctx.add(f)
 calc.evaluate(ctx, 'int(f, -2, 2)')
 > -18.666666666666668
@@ -152,7 +156,7 @@ calc.latex(ctx, 'f(x) = 3*x+6')
 LaTeX can also be converted into a png image using `calc.latex_to_image()`. The returned value will
 be a PIL Image object.
 ```py
-tex = calc.latex(ctx, 'int(f(t)=3*t/4+6, -5, 5)')
+tex = calc.latex(ctx, 'int(f(t)=3t/4+6, -5, 5)')
 img = calc.latex_to_image(tex, color='black', transparent=False)
 img.save('mytex.png')
 ```
@@ -162,16 +166,16 @@ img.save('mytex.png')
 1-dimensional functions (1 input and 1 output) can be graphed using `calc.graph()`. The returned value is a matplotlib Figure.
 `savefig_bytesio()` and `savefig_png()` can be used to save the figure.
 ```py
-fig = calc.graph(ctx, 'f(x)=1/25*(x-8)*(x-2)*(x+8)')
+fig = calc.graph(ctx, 'f(x)=1/25(x-8)(x-2)(x+8)')
 fig.show()
 ```
 ![](https://i.imgur.com/J0CuEkr.png)
 
 `calc.graph()` accepts 4 types of function definitions:
 
-1. explicit signature `foo(z) = 2*z^3`
-2. y equals `y = 2*x^3`
-3. nothing `2*x^3`
+1. explicit signature `foo(z) = 2z^3`
+2. y equals `y = 2x^3`
+3. nothing `2x^3`
 4. a function object from `calc.evaluate()` or `ctx.get()`
 
 For 2 and 3, the variable used in the function must be `x`.
@@ -253,7 +257,7 @@ ctx.add(
     # the expected function takes
     FunctionDefinition('myfun', [f_arg('f', 1), 'a', 'b'], my_function)
 )
-calc.evaluate(ctx, 'myfun(f(x)=2*x, 0, 100)')
+calc.evaluate(ctx, 'myfun(f(x)=2x, 0, 100)')
 > 9900
 ```
 
@@ -264,8 +268,8 @@ Contexts (minus the root context) can be saved to .json files using `calc.save_c
 ctx = calc.create_default_context()
 ctx.push_context()
 
-ctx.add(calc.evaluate(ctx, 'f(x) = 3*x^2 + 4'))
-ctx.add(calc.evaluate(ctx, 'g(x) = 3/2*x^3 + 4*x - 1'))
+ctx.add(calc.evaluate(ctx, 'f(x) = 3x^2 + 4'))
+ctx.add(calc.evaluate(ctx, 'g(x) = 3/2x^3 + 4x - 1'))
 ctx.push_context()
 ctx.set('foo', 75.24623)
 
@@ -396,12 +400,9 @@ calc.evaluate(ctx, 'f(foo), g(foo)')
 # Other stuff
 
 ## Todo list
-i.e. things i'm not gonna bother with
-* Implicit multiplication
-* Add more than literally zero comments lol
-* Fix my mess of a life
 * Returning functions then calling them
 * Delete this whole thing and just use a WolframAlpha API like a smart person
 * ~~Nested lists & passing a list as one argument~~
 * ~~Functions with arbitrary number of arguments~~
 * ~~Lists as function arguments~~
+* ~~Implicit multiplication~~

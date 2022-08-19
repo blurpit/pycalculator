@@ -1,5 +1,5 @@
 from .context import Context
-from .definitions import Variable, FunctionDefinition
+from .definitions import Variable, FunctionDefinition, BinaryOperatorDefinition, _parse_time_funcs
 
 
 def tokenize(ctx:Context, exp):
@@ -39,6 +39,7 @@ def tokenize(ctx:Context, exp):
     if custom_func_name:
         ctx.pop_context()
 
+    add_implicit_mul(ctx, tokens)
     return tokens
 
 def next_token(ctx:Context, text, pos):
@@ -159,3 +160,20 @@ def split_commas(ctx, text):
 
 def is_identifier(name):
     return name.isalpha()
+
+def add_implicit_mul(ctx, tokens):
+    mul = ctx.get('*')
+    i = 1
+    while i < len(tokens):
+        curr = tokens[i]
+        prev = tokens[i - 1]
+        if is_implicit_mul(prev, curr):
+            tokens.insert(i, mul)
+            i += 1
+        i += 1
+
+def is_implicit_mul(prev, curr):
+    return prev != '=' \
+           and isinstance(prev, (int, float, str, _parse_time_funcs)) \
+           and isinstance(curr, (str, FunctionDefinition, _parse_time_funcs)) \
+           and not isinstance(curr, BinaryOperatorDefinition)
