@@ -9,7 +9,7 @@ pip install git+https://github.com/blurpit/pycalculator.git
 ```
 
 Required python packages: numpy, scipy, matplotlib, latex, pdf2image.
-[LaTeX installation](https://www.latex-project.org/) is required for latex rendering. Make sure the latex executables are added to the PATH environment variable.
+A [LaTeX installation](https://www.latex-project.org/) is required for latex rendering. Make sure the latex executables are added to the PATH environment variable.
 
 # Usage
 ```py
@@ -23,7 +23,8 @@ constants.
 ## Expression evaluation
 ### Simple expressions
 ```py
-calc.evaluate(ctx, '9 + 10') # simple addition
+# simple addition
+calc.evaluate(ctx, '9 + 10')
 > 19
 
 # order of operations and parentheses
@@ -40,7 +41,7 @@ calc.evaluate(ctx, 'ans*2')
 
 # multiple outputs example
 calc.evaluate(ctx, '2^1, 2^2, 2^3, 2^4, 2^5, 2^6')
-> [2, 4, 8, 16, 32, 64]
+> (2, 4, 8, 16, 32, 64)
 
 # implicit multiplication is not implemented so don't try it.
 calc.evaluate(ctx, '4(3+2)(6)')
@@ -51,7 +52,7 @@ all operators and functions have valid inputs.
 ### Using functions
 ```py
 calc.evaluate(ctx, 'sin(2*pi/3), sqrt(3)/2')
-> [0.8660254037844387, 0.8660254037844386]
+> (0.8660254037844387, 0.8660254037844386)
 
 calc.evaluate(ctx, 'logb(3^9, 3)')
 > 9.0
@@ -82,7 +83,7 @@ f(3, 2)
 ```
 
 ### Creating constants
-Constants are just treated as 0-argument functions, so they work similarly to defining a
+Constants are treated as 0-argument functions, so they work similarly to defining a
 function as above.
 ```py
 foo = calc.evaluate(ctx, 'foo = 7*pi/3')
@@ -98,9 +99,10 @@ calc.evaluate(ctx, 'foo*3/7')
 # since constants are 0-arg functions, they are calculated separately for each 
 # time they are evaluated
 foo = calc.evaluate(ctx, 'foo = round(rand()*100)')
+ctx.add(foo)
 for _ in range(10):
-    print(foo(), end=' ')
-> 48 6 70 69 82 84 9 56 52 80 
+    print(calc.evaluate(ctx, 'foo'), end=' ')
+> 66 3 23 66 81 34 20 11 84 41 
 
 ```
 
@@ -121,6 +123,17 @@ f = calc.evaluate(ctx, 'f(t) = (t+2)*(t-3)')
 ctx.add(f)
 calc.evaluate(ctx, 'int(f, -2, 2)')
 > -18.666666666666668
+```
+
+### Vectors & Matrices
+The `v(*x)` and `mat(*v)` functions are used to create vectors and matrices respectively.
+```py
+calc.evaluate(ctx, '2 * v(1, 1+1, 4-1)')
+> (2, 4, 6)
+
+# the 'v' when creating vectors can sometimes be omitted, such as inside mat()
+calc.evaluate(ctx, 'mat((2^3, 2^4), (2^5, 2^6))')
+> mat((8, 16), (32, 64))
 ```
 
 ## LaTeX
@@ -163,36 +176,14 @@ fig.show()
 
 For 2 and 3, the variable used in the function must be `x`.
 
-## Saving to JSON
-Contexts (minus the root context) can be saved to .json files using `calc.save_contexts()` and loaded using `calc.load_contexts()`.
-
-```py
-ctx = calc.create_default_context()
-ctx.push_context()
-
-ctx.add(calc.evaluate(ctx, 'f(x) = 3*x^2 + 4'))
-ctx.add(calc.evaluate(ctx, 'g(x) = 3/2*x^3 + 4*x - 1'))
-ctx.push_context()
-ctx.set('foo', 75.24623)
-
-calc.save_contexts(ctx, 'saved_math.json')
-```
-```json
-[{"f": "f(x) = 3*x^2+4", "g": "g(x) = 3/2*x^3+4*x-1"}, {"foo": "75.24623"}]
-```
-
-```py
-ctx = calc.create_default_context()
-# note that a new context is not pushed before loading
-
-calc.load_contexts(ctx, 'saved_math.json')
-calc.evaluate(ctx, 'f(foo), g(foo)')
-> [16989.9853876387, 639365.6665474502]
-```
-
 ## Contexts
-A `Context` object has a stack of contexts that can be pushed or popped to create nested
-scopes and redefine things without deleting them. Example:
+A context is a set of defined symbols for the evaluator. These include operators, functions,
+constants, variables, etc.
+A `calc.Context` object has a stack of contexts that can be pushed or popped to create nested
+scopes and redefine things without deleting them. Use `ctx.set(name, item)` to add to the context, 
+or `ctx.add(item)` if the item is a `FunctionDefinition`, `Constant`, or `CustomFunction`.
+
+Example:
 ```py
 ctx = calc.create_default_context()
 
@@ -219,69 +210,198 @@ ContextError: 'x' is undefined.
 
 The first context in the stack is the root context, and cannot be modified without setting `root=True` in `ctx.add()` or `ctx.set()`.
 
-### The default context
-`calc.create_default_context()` defines the following:
+### Function Definitions
+A `FunctionDefinition` defines the name and arguments for a function.
+```py
+from calc.definitions import FunctionDefinition
+ctx = calc.create_default_context()
+ctx.push_context()
 
-| Definition | Type | Description | 
-| - | - | - |
-| `+` | Binary operator | Add |
-| `-` | Binary operator | Subtract |
-| `*` | Binary operator | Multiply |
-| `/` | Binary operator | Divide |
-| `%` | Binary operator | Remainder |
-| `^` | Binary operator | Exponent |
-| `,` | Binary operator | Argument/output separator |
-| `π` or `pi` | Constant | 3.14159... |
-| `e` | Constant | 2.71828... |
-| `ϕ` or `phi` | Constant | 1.61803... |
-| `∞` or `inf` | Constant | Infinity |
-| `ans` | Constant | Result of previous evaluation |
-| `-x` | Unary operator | Negation |
-| `abs(x)` | Function | Absolute value |
-| `rad(θ)` | Function | Degrees -> radians |
-| `deg(θ)` | Function | Radians -> degrees |
-| `round(x)` | Function | Round to nearest int |
-| `floor(x)` | Function | Round down to nearest int |
-| `ceil(x)` | Function | Round up to nearest int |
-| `sqrt(x)` | Function | Square root |
-| `root(x, n)` | Function | n-th root |
-| `hypot(x, y)` | Function | `sqrt(x^2 + y^2)` |
-| `sin(θ)` | Function | Sine |
-| `cos(θ)` | Function | Cosine |
-| `tan(θ)` | Function | Tangent |
-| `sec(θ)` | Function | Secant |
-| `csc(θ)` | Function | Cosecant |
-| `cot(θ)` | Function | Cotangent |
-| `asin(x)` | Function | Inverse sine |
-| `acos(x)` | Function | Inverse cosine |
-| `atan(x)` | Function | Inverse tangent |
-| `sinh(x)` | Function | Hyperbolic sine |
-| `cosh(x)` | Function | Hyperbolic cosine |
-| `tanh(x)` | Function | Hyperbolic tangent |
-| `exp(x)` | Function | `e^x` |
-| `ln(x)` | Function | Natural logarithm |
-| `log(x)` | Function | Base 10 logarithm |
-| `logb(x, b)` | Function | Base b logarithm |
-| `fact(n)` | Function | Factorial |
-| `perm(n, k)` | Function | Permutations |
-| `choose(n, k)` | Function | Combinations |
-| `binom(n, x, p)` | Function | Binomial probability |
-| `fib(n)` | Function | n-th Fibonacci number |
-| `rand()` | Function | Random between 0 and 1 |
-| `randr(a, b)` | Function | Random between a and b |
-| `int(f(_), a, b)` | Function | Definite integral
-| `deriv(f(_), x)` | Function | Derivative evaluated at x |
-| `nderiv(f(_), x)` | Function | n-th Derivative evaluated at x |
+def my_function(a, b, c):
+    return (a + b) ** c
+
+ctx.add(
+    # 'abc' can be used as a shorthand for ['a', 'b', 'c'].
+    FunctionDefinition('myfun', 'abc', my_function)
+)
+calc.evaluate(ctx, 'myfun(5, -2, 7)')
+> 2187
+
+# BinaryOperatorDefinitions work similarly.
+from calc.definitions import BinaryOperatorDefinition
+
+def bin_and(a, b):
+    return a & b
+
+ctx.add(
+    # The 4 and 0 are precedence and associativity respectively.
+    # Lower number = higher precedence.
+    # 0 for left-to-right associativity, 1 for right-to-left associativity.
+    BinaryOperatorDefinition('&', bin_and, 4, 0)
+)
+calc.evaluate(ctx, '742 & 357')
+> 100
+
+# If you want a function argument, wrap the argument in f_arg().
+from calc.definitions import FunctionDefinition, f_arg
+
+def my_function(f, a, b):
+    return sum(f(i) for i in range(a, b))
+
+ctx.add(
+    # f_arg() takes the name of the argument, and the number of arguments 
+    # the expected function takes
+    FunctionDefinition('myfun', [f_arg('f', 1), 'a', 'b'], my_function)
+)
+calc.evaluate(ctx, 'myfun(f(x)=2*x, 0, 100)')
+> 9900
+```
+
+### Saving to JSON
+Contexts (minus the root context) can be saved to .json files using `calc.save_contexts()` and loaded using `calc.load_contexts()`.
+
+```py
+ctx = calc.create_default_context()
+ctx.push_context()
+
+ctx.add(calc.evaluate(ctx, 'f(x) = 3*x^2 + 4'))
+ctx.add(calc.evaluate(ctx, 'g(x) = 3/2*x^3 + 4*x - 1'))
+ctx.push_context()
+ctx.set('foo', 75.24623)
+
+calc.save_contexts(ctx, 'saved_math.json')
+```
+```json
+[{"f": "f(x) = 3*x^2+4", "g": "g(x) = 3/2*x^3+4*x-1"}, {"foo": "75.24623"}]
+```
+
+```py
+ctx = calc.create_default_context()
+# note that a new context is not pushed before loading
+
+calc.load_contexts(ctx, 'saved_math.json')
+calc.evaluate(ctx, 'f(foo), g(foo)')
+> (16989.9853876387, 639365.6665474502)
+```
+
+### The default context
+`calc.create_default_context()` defines all of the following:
+
+#### Binary Operators
+| Definition        | Description                    | 
+|-------------------|--------------------------------|
+| `+`               | Add                            |
+| `-`               | Subtract                       |
+| `*`               | Multiply                       |
+| `/`               | Divide                         |
+| `%`               | Remainder                      |
+| `^`               | Exponent                       |
+| `,`               | Argument/output separator      |
+
+#### Constants
+| Definition        | Description                    |
+|-------------------|--------------------------------|
+| `π` or `pi`       | 3.14159...                     |
+| `e`               | 2.71828...                     |
+| `ϕ` or `phi`      | 1.61803...                     |
+| `∞` or `inf`      | Infinity                       |
+| `ans`             | Result of previous evaluation  |
+
+#### Basic Functions
+| Definition        | Description                    |
+|-------------------|--------------------------------|
+| `-x`              | Negation                       |
+| `abs(x)`          | Absolute value                 |
+| `rad(θ)`          | Degrees -> radians             |
+| `deg(θ)`          | Radians -> degrees             |
+| `round(x)`        | Round to nearest int           |
+| `floor(x)`        | Round down to nearest int      |
+| `ceil(x)`         | Round up to nearest int        |
+
+#### Roots & Complex Functions
+| Definition        | Description                    |
+|-------------------|--------------------------------|
+| `sqrt(x)`         | Square root                    |
+| `root(x, n)`      | n-th root                      |
+| `hypot(x, y)`     | `sqrt(x^2 + y^2)`              |
+
+#### Trigonometric Functions
+| Definition        | Description                    |
+|-------------------|--------------------------------|
+| `sin(θ)`          | Sine                           |
+| `cos(θ)`          | Cosine                         |
+| `tan(θ)`          | Tangent                        |
+| `sec(θ)`          | Secant                         |
+| `csc(θ)`          | Cosecant                       |
+| `cot(θ)`          | Cotangent                      |
+| `asin(x)`         | Inverse sine                   |
+| `acos(x)`         | Inverse cosine                 |
+| `atan(x)`         | Inverse tangent                |
+| `sinh(x)`         | Hyperbolic sine                |
+| `cosh(x)`         | Hyperbolic cosine              |
+| `tanh(x)`         | Hyperbolic tangent             |
+
+#### Exponential & Logarithmic Functions
+| Definition        | Description                    |
+|-------------------|--------------------------------|
+| `exp(x)`          | `e^x`                          |
+| `ln(x)`           | Natural logarithm              |
+| `log(x)`          | Base 10 logarithm              |
+| `logb(x, b)`      | Base b logarithm               |
+
+#### Combinatorial & Random Functions
+| Definition        | Description                    |
+|-------------------|--------------------------------|
+| `fact(n)`         | Factorial                      |
+| `perm(n, k)`      | Permutations                   |
+| `choose(n, k)`    | Combinations                   |
+| `binom(n, x, p)`  | Binomial probability           |
+| `fib(n)`          | n-th Fibonacci number          |
+| `rand()`          | Random between 0 and 1         |
+| `randr(a, b)`     | Random between a and b         |
+
+#### Calculus
+| Definition        | Description                    |
+|-------------------|--------------------------------|
+| `int(f(_), a, b)` | Definite integral              |
+| `deriv(f(_), x)`  | Derivative evaluated at x      |
+| `nderiv(f(_), x)` | n-th Derivative evaluated at x |
+
+#### Vectors & Matrices
+| Definition      | Description                    |
+|-----------------|--------------------------------|
+| `v(*x)`         | Create a vector                |
+| `mat(*v)`       | Create a matrix                |
+| `I(n)`          | NxN identity matrix            |
+| `dot(v, w)`     | Vector dot product             |
+| `mag(v)`        | Vector length                  |
+| `norm(v)`       | Normalized vector              |
+| `shape(M)`      | Matrix shape (rows, cols)      |
+| `mrow(M, r)`    | Get matrix row vector          |
+| `mcol(M, c)`    | Get matrix column vector       |
+| `mpos(M, r, c)` | Get matrix value at (row, col) |
+| `vi(v, i)`      | Get vector value at index i    |
+
+#### Linear Algebra
+| Definition  | Description             |
+|-------------|-------------------------|
+| `det(M)`    | Matrix determinant      |
+| `rank(M)`   | Matrix rank             |
+| `inv(M)`    | Matrix inverse          |
+| `kernel(M)` | Matrix null space       |
+| `lu(M)`     | Matrix LU decomposition |
+| `svd(M)`    | Matrix SVD              |
+
 
 # Other stuff
 
 ## Todo list
 i.e. things i'm not gonna bother with
-1. Implicit multiplication
-2. Add more than literally zero comments lol
-3. Fix my mess of a life
-4. Nested lists & passing a list as one argument
-5. Functions with arbitrary number of arguments
-6. Returning functions then calling them
-7. Lists as function arguments
-8. Delete this whole thing and just use a WolframAlpha API like a smart person
+* Implicit multiplication
+* Add more than literally zero comments lol
+* Fix my mess of a life
+* Returning functions then calling them
+* Delete this whole thing and just use a WolframAlpha API like a smart person
+* ~~Nested lists & passing a list as one argument~~
+* ~~Functions with arbitrary number of arguments~~
+* ~~Lists as function arguments~~
