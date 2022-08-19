@@ -472,13 +472,13 @@ def create_default_context():
         Constant('inf', math.inf, '∞'),
 
         # Basic Binary Operators
-        BinaryOperatorDefinition('+', operator.add,     1, 0),
-        BinaryOperatorDefinition('-', operator.sub,     1, 0),
-        MultiplicationDefinition('*', operator.mul,     3, 0),
-        DivisionDefinition      ('/', operator.truediv, 3, 0),
-        BinaryOperatorDefinition('%', operator.mod,     3, 0),
-        BinaryOperatorDefinition('^', operator.pow,     5, 1),
-        BinaryOperatorDefinition(',', None, 0, 0),
+        BinaryOperatorDefinition('+', operator.add,     3, 0),
+        BinaryOperatorDefinition('-', operator.sub,     3, 0),
+        MultiplicationDefinition('*', operator.mul,     2, 0),
+        DivisionDefinition      ('/', operator.truediv, 2, 0),
+        BinaryOperatorDefinition('%', operator.mod,     2, 0),
+        BinaryOperatorDefinition('^', operator.pow,     1, 1),
+        BinaryOperatorDefinition(',', None, 9999, 0),
 
         # Basic Functions
         NegationDefinition('neg',   'x', operator.neg),

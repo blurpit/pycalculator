@@ -19,9 +19,7 @@ class Context:
         for item in items:
             if isinstance(item, CustomFunction):
                 item = FunctionDefinition(item.definition.name, item.definition.args, item)
-                self.set(item.name, item, root)
-            else:
-                self.set(item.name, item, root)
+            self.set(item.name, item, root)
 
     def get(self, name, default:Any=ContextError):
         for i in range(len(self.ctx_stack)-1, -1, -1):

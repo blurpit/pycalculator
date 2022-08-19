@@ -91,7 +91,7 @@ class BinaryOperatorDefinition(FunctionDefinition):
         if self.precedence == other.precedence:
             return self.associativity == 1
         else:
-            return self.precedence > other.precedence
+            return self.precedence < other.precedence
 
 
 class Constant:
