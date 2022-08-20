@@ -18,17 +18,13 @@ def tokenize(ctx:Context, exp):
         return tokens
 
     # Split function signature from the rest of the expression
-    custom_func_name, args, pos = tokenize_signature(exp)
-    if custom_func_name:
-        if not is_identifier(custom_func_name):
-            raise ValueError("'{}' is not a valid function name.".format(custom_func_name))
-        tokens.append(FunctionDefinition(custom_func_name, args, None))
+    custom_definition, pos = tokenize_signature(exp)
+    if custom_definition:
+        tokens.append(custom_definition)
         tokens.append('=')
         # Define the args in the context. Value is unnecessary.
         ctx.push_context()
-        for arg in args:
-            if not is_identifier(arg):
-                raise ValueError("'{}' is not a valid argument name.".format(arg))
+        for arg in custom_definition.args:
             ctx.set(arg, 0)
 
     while pos < len(exp):
@@ -36,7 +32,7 @@ def tokenize(ctx:Context, exp):
         if token != [] and token != ['']:
             tokens.extend(token)
 
-    if custom_func_name:
+    if custom_definition:
         ctx.pop_context()
 
     add_implicit_mul(ctx, tokens)
@@ -119,26 +115,35 @@ def tokenize_negation(ctx, text, pos):
 def tokenize_signature(text):
     parts = text.split('=', 1)
     if len(parts) == 2:
-        name, args = parse_signature(parts[0])
-        if name:
-            return name, args, len(parts[0]) + 1
-    return None, None, 0
+        definition = parse_signature(parts[0])
+        if definition:
+            return definition, len(parts[0]) + 1
+    return None, 0
 
 def parse_signature(text):
-    text = text.replace(' ', '')
-
-    if text.endswith('()'):
-        text = text[:-2]
-    if is_identifier(text):
-        return text, []
-
     parts = text.split('(')
-    if len(parts) != 2:
-        return None, None
-    name, args = parts
-    args = args.lstrip('(').rstrip(')').split(',')
+    if len(parts) > 2: # invalid
+        raise SyntaxError("'{}' is not a valid function signature.".format(text))
+    elif len(parts) == 1: # constant
+        name, args = text, []
+        use_cache = True
+    else: # function
+        name, args = parts
+        args = args.lstrip('(').rstrip(')').split(',')
+        if args == ['']: # 0-arg function
+            args = []
+        use_cache = False
 
-    return name, args
+    if not is_identifier(name):
+        raise ValueError("'{}' is not a valid function name.".format(name))
+    for arg in args:
+        if not is_identifier(arg):
+            raise ValueError("'{}' is not a valid argument name.".format(arg))
+
+    return FunctionDefinition(
+        name, args, None,
+        use_cache=use_cache
+    )
 
 def split_commas(ctx, text):
     """ Split a string by commas that are not inside parenthesis """

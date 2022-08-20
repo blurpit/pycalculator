@@ -81,14 +81,18 @@ calc.evaluate(ctx, 'f(3+1)')
 
 # multiple arguments example
 f = calc.evaluate(ctx, 'f(x, y) = x^3 * y^2')
-ctx.add(f)
 f(3, 2)
 > 108
+
+# zero argument example
+f = calc.evaluate(ctx, 'f() = round(100rand())')
+ctx.add(f)
+calc.evaluate(ctx, 'f(), f(), f(), f(), f()')
+> (46, 47, 79, 21, 64)
 ```
 
 ### Creating constants
-Constants are treated as 0-argument functions, so they work similarly to defining a
-function as above.
+Constants are treated as cached 0-arg functions, so they work similarly.
 ```py
 foo = calc.evaluate(ctx, 'foo = 7pi/3')
 foo
@@ -100,13 +104,10 @@ ctx.add(foo)
 calc.evaluate(ctx, 'foo*3/7')
 > 3.141592653589793
 
-# since constants are 0-arg functions, they are calculated separately for each 
-# time they are evaluated
-foo = calc.evaluate(ctx, 'foo = round(rand()*100)')
-ctx.add(foo)
-for _ in range(10):
-    print(calc.evaluate(ctx, 'foo'), end=' ')
-> 66 3 23 66 81 34 20 11 84 41 
+# The constant is calculated only once on first use
+foo = calc.evaluate(ctx, 'foo = round(100rand())')
+calc.evaluate(ctx, 'foo, foo, foo, foo, foo')
+> 78 78 78 78 78 
 
 ```
 

@@ -7,7 +7,10 @@ class FunctionDefinition:
     precedence = 3
     associativity = 1
 
-    def __init__(self, name, args, func, precedence=None, associativity=None, disable_arg_count_check=False):
+    def __init__(self, name, args, func,
+                 precedence=None, associativity=None,
+                 disable_arg_count_check=False,
+                 use_cache=True):
         self.name = name
         self.args, self.f_args = self._get_args(args)
         self.func = func
@@ -16,16 +19,17 @@ class FunctionDefinition:
         if associativity is not None:
             self.associativity = associativity
         self.disable_arg_count_check = disable_arg_count_check
+        self.is_constant = len(self.args) == 0 and use_cache
 
     def is_func_arg(self, index):
         return index in self.f_args
 
     @property
     def signature(self):
-        if self.args:
-            return '{}({})'.format(self.name, ', '.join(map(str, self.args)))
-        else:
+        if self.is_constant:
             return self.name
+        else:
+            return '{}({})'.format(self.name, ', '.join(map(str, self.args)))
 
     def __str__(self):
         return self.make_str(self.args)
@@ -35,8 +39,10 @@ class FunctionDefinition:
             if isinstance(self.func, CustomFunction):
                 return str(self.func)
             return '{}({})'.format(self.name, ','.join(map(str, inputs)))
-        else:
+        elif self.is_constant:
             return self.name
+        else:
+            return self.name + '()'
 
     def latex(self):
         return self.make_latex(self.args)
@@ -46,8 +52,10 @@ class FunctionDefinition:
             if isinstance(self.func, CustomFunction):
                 return _latex(self.func)
             return self.name + r'\left(' + ','.join(map(_latex, inputs)) + r'\right)'
-        else:
+        elif self.is_constant:
             return self.name
+        else:
+            return self.name + r'\left(\right)'
 
     def __repr__(self):
         return str(self)
@@ -300,18 +308,27 @@ class CustomFunction:
     def __init__(self, ctx, definition):
         self.definition = definition
         self.ctx = ctx
+        self._cached_val = None
 
     def __call__(self, *inputs):
         if len(inputs) != len(self.definition.args):
             raise SyntaxError("{} expected {} argument(s), but {} were given."
                               .format(self.definition.signature, len(self.definition.args), len(inputs)))
+
+        if self._cached_val is not None:
+            return self._cached_val
+
         with self.ctx.with_context():
             for arg, val in zip(self.definition.args, inputs):
                 self.ctx.set(arg, val)
             if isinstance(self.definition.func, _parse_time_funcs):
-                return self.definition.func()
+                result = self.definition.func()
             else:
-                return self.definition.func
+                result = self.definition.func
+
+        if self.definition.is_constant:
+            self._cached_val = result
+        return result
 
     def __str__(self):
         return '{} = {}'.format(self.definition.signature, self.definition.func)
