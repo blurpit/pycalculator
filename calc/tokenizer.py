@@ -1,5 +1,5 @@
 from .context import Context
-from .definitions import Variable, FunctionDefinition, BinaryOperatorDefinition, _parse_time_funcs
+from .definitions import Variable, FunctionDefinition, Constant, BinaryOperatorDefinition
 
 
 def tokenize(ctx:Context, exp):
@@ -179,7 +179,7 @@ def add_implicit_mul(ctx, tokens):
         i += 1
 
 def is_implicit_mul(prev, curr):
-    return (isinstance(prev, FunctionDefinition) and len(prev.args) == 0) \
-           or isinstance(prev, (int, float, str, _parse_time_funcs)) \
-           and isinstance(curr, (str, FunctionDefinition, _parse_time_funcs)) \
-           and not isinstance(curr, BinaryOperatorDefinition)
+    if isinstance(prev, FunctionDefinition) and not isinstance(prev, BinaryOperatorDefinition):
+        return prev.is_constant
+    return not isinstance(curr, BinaryOperatorDefinition) \
+           and not isinstance(prev, BinaryOperatorDefinition)
