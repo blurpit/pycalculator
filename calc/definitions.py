@@ -22,7 +22,10 @@ class FunctionDefinition:
 
     @property
     def signature(self):
-        return '{}({})'.format(self.name, ', '.join(map(str, self.args)))
+        if self.args:
+            return '{}({})'.format(self.name, ', '.join(map(str, self.args)))
+        else:
+            return self.name
 
     def __str__(self):
         return self.make_str(self.args)
