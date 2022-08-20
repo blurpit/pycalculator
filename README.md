@@ -273,7 +273,9 @@ ctx.add(calc.evaluate(ctx, 'g(x) = 3/2x^3 + 4x - 1'))
 ctx.push_context()
 ctx.set('foo', 75.24623)
 
-calc.save_contexts(ctx, 'saved_math.json')
+j = calc.save_contexts(ctx)
+with open('saved_math.json', 'w') as f:
+    f.write(j)
 ```
 ```json
 [{"f": "f(x) = 3*x^2+4", "g": "g(x) = 3/2*x^3+4*x-1"}, {"foo": "75.24623"}]
@@ -283,7 +285,9 @@ calc.save_contexts(ctx, 'saved_math.json')
 ctx = calc.create_default_context()
 # note that a new context is not pushed before loading
 
-calc.load_contexts(ctx, 'saved_math.json')
+with open('saved_math.json') as f:
+    j = f.read()
+calc.load_contexts(ctx, j)
 calc.evaluate(ctx, 'f(foo), g(foo)')
 > (16989.9853876387, 639365.6665474502)
 ```

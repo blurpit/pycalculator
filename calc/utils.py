@@ -170,40 +170,41 @@ def latex_to_image(tex, dpi=200, color='white', transparent=True):
     )
     return images[0]
 
-def load_contexts(ctx, fp):
+def load_contexts(ctx, json_text):
     """
-    Load a context stack from a json file into an existing context object
+    Load a context stack from json text into an existing context object.
+    Do not push a new context before loading.
     :param ctx: Starting context
-    :param fp: Filepath
+    :param json_text: JSON text to load
     """
-    with open(fp, 'r') as file:
-        contexts = json.load(file)
+    contexts = json.loads(json_text)
+    old_ans = ctx.ans
     for element in contexts:
         ctx.push_context()
         for name, expression in element.items():
-            expression = expression.replace(' ', '')
-            tokens = tokenize(ctx, expression)
-            parsed = parse(ctx, tokens)
-            if isinstance(parsed, (float, int)):
-                ctx.set(name, parsed)
+            result = evaluate(ctx, expression)
+            if isinstance(result, (float, int)):
+                ctx.set(name, result)
             else:
-                ctx.add(parsed)
+                ctx.add(result)
+    ctx.ans = old_ans
 
-def save_contexts(ctx, fp):
+def save_contexts(ctx):
     """
-    Save a context stack into a json file. Does not include the context stack root.
+    Convert a context stack into JSON text. Does not include the root context.
     :param ctx: Context to save
-    :param fp: Filepath
+    :return: JSON string
     """
     result = []
     for element in ctx.ctx_stack[1:]:
         result.append({})
         for name, item in element.items():
             if isinstance(item, FunctionDefinition):
+                if not isinstance(item.func, CustomFunction):
+                    raise TypeError("'{}' is not JSON serializable.".format(item))
                 item = item.func
             result[-1][name] = str(item)
-    with open(fp, 'w') as file:
-        json.dump(result, file)
+    return json.dumps(result)
 
 def is_identifier(name):
     return name.isalpha()
