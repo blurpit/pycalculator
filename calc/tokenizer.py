@@ -176,7 +176,8 @@ def add_implicit_mul(ctx, tokens):
         i += 1
 
 def is_implicit_mul(prev, curr):
-    if isinstance(prev, FunctionDefinition) and not isinstance(prev, BinaryOperatorDefinition):
-        return prev.is_constant
-    return not isinstance(curr, BinaryOperatorDefinition) \
-           and not isinstance(prev, BinaryOperatorDefinition)
+    if isinstance(prev, BinaryOperatorDefinition) or isinstance(curr, BinaryOperatorDefinition):
+        return False
+    if isinstance(prev, FunctionDefinition):
+        return len(prev.args) == 0
+    return True

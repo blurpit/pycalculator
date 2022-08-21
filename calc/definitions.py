@@ -10,7 +10,7 @@ class FunctionDefinition:
     def __init__(self, name, args, func,
                  precedence=None, associativity=None,
                  disable_arg_count_check=False,
-                 use_cache=True):
+                 use_cache=False):
         self.name = name
         self.args, self.f_args = self._get_args(args)
         self.func = func
