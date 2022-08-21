@@ -57,79 +57,78 @@ def parse(ctx:Context, tokens):
         else:
             output.append(Function(ctx, definition, []))
 
-    # Check whether this expression is defining a new function
-    new_func_definition = tokens[0] if len(tokens) >= 2 and tokens[1] == '=' else None
-    if new_func_definition:
-        del tokens[:2]
-        ctx.push_context() # Push args to context so they are defined
-        for arg in new_func_definition.args:
-            ctx.set(arg, 0)
+    with ctx.with_context():
+        # Check whether this expression is defining a new function
+        new_func_definition = tokens[0] if len(tokens) >= 2 and tokens[1] == '=' else None
+        if new_func_definition:
+            del tokens[:2]
+            for arg in new_func_definition.args:
+                ctx.set(arg, 0)
 
-    # Check tokens are not empty
-    if not tokens:
-        raise SyntaxError("Expression is empty.")
+        # Check tokens are not empty
+        if not tokens:
+            raise SyntaxError("Expression is empty.")
 
-    for token in tokens:
-        # Binary operator or function
-        if isinstance(token, FunctionDefinition):
-            while stack and not token > peek():
-                coalesce(stack.pop())
-
-            if len(token.args) > 0:
-                stack.append(token)
-            else:
-                # Do not push 0-input functions to the stack
-                coalesce(token)
-
-            if token.name == ',':
-                increment_arg_index()
-
-        # Operand or expression in parentheses
-        else:
-            top = peek() if stack else None
-            inside_func = isinstance(top, FunctionDefinition) \
-                          and not isinstance(top, BinaryOperatorDefinition)
-
-            if inside_func:
-                ctx.push_state(_FuncInputsCtxState(top))
-
-            operand = parse_operand(ctx, token)
-            output.append(operand)
-
-            if isinstance(operand, Function) \
-                    and not inside_func \
-                    and isinstance(token, str) \
-                    and (not top or top.name != ','):
-                operand.bracketed = True
-
-            if isinstance(operand, Vector):
-                operand.bracketed = True
-
-            if inside_func:
-                ctx.pop_state()
-                if isinstance(token, str):
-                    # Close parenthesis. Coalesce one operator.
+        for token in tokens:
+            # Binary operator or function
+            if isinstance(token, FunctionDefinition):
+                while stack and not token > peek():
                     coalesce(stack.pop())
+
+                if len(token.args) > 0:
+                    stack.append(token)
                 else:
-                    # Function without parenthesis. Coalesce by precedence.
-                    while stack and not top > peek():
+                    # Do not push 0-input functions to the stack
+                    coalesce(token)
+
+                if token.name == ',':
+                    increment_arg_index()
+
+            # Operand or expression in parentheses
+            else:
+                top = peek() if stack else None
+                inside_func = isinstance(top, FunctionDefinition) \
+                              and not isinstance(top, BinaryOperatorDefinition)
+
+                if inside_func:
+                    ctx.push_state(_FuncInputsCtxState(top))
+
+                operand = parse_operand(ctx, token)
+                output.append(operand)
+
+                if isinstance(operand, Function) \
+                        and not inside_func \
+                        and isinstance(token, str) \
+                        and (not top or top.name != ','):
+                    operand.bracketed = True
+
+                if isinstance(operand, Vector):
+                    operand.bracketed = True
+
+                if inside_func:
+                    ctx.pop_state()
+                    if isinstance(token, str):
+                        # Close parenthesis. Coalesce one operator.
                         coalesce(stack.pop())
+                    else:
+                        # Function without parenthesis. Coalesce by precedence.
+                        while stack and not top > peek():
+                            coalesce(stack.pop())
 
-    while stack:
-        coalesce(stack.pop())
+        while stack:
+            coalesce(stack.pop())
 
-    if len(output) > 1:
-        raise SyntaxError("Leftover tokens {} after evaluation. Make sure all operators "
-                          "and functions have valid inputs.".format(output))
-    elif len(output) < 1:
-        raise SyntaxError("Output was empty. Make sure all operators and functions have "
-                          "valid inputs.")
+        if len(output) > 1:
+            raise SyntaxError("Leftover tokens {} after evaluation. Make sure all operators "
+                              "and functions have valid inputs.".format(output))
+        elif len(output) < 1:
+            raise SyntaxError("Output was empty. Make sure all operators and functions have "
+                              "valid inputs.")
 
-    output = output[0]
-    if new_func_definition:
-        ctx.pop_context()
-        new_func_definition.func = output
-        output = CustomFunction(ctx, new_func_definition)
+        output = output[0]
+        if new_func_definition:
+            new_func_definition.func = output
+            output = CustomFunction(ctx, new_func_definition)
 
     return output
 

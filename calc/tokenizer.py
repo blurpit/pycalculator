@@ -17,23 +17,20 @@ def tokenize(ctx:Context, exp):
                 tokens.append(token)
         return tokens
 
-    # Split function signature from the rest of the expression
-    custom_definition, pos = tokenize_signature(exp)
-    if custom_definition:
-        tokens.append(custom_definition)
-        tokens.append('=')
-        # Define the args in the context. Value is unnecessary.
-        ctx.push_context()
-        for arg in custom_definition.args:
-            ctx.set(arg, 0)
+    with ctx.with_context():
+        # Split function signature from the rest of the expression
+        custom_definition, pos = tokenize_signature(exp)
+        if custom_definition:
+            tokens.append(custom_definition)
+            tokens.append('=')
+            # Define the args in the context. Value is unnecessary.
+            for arg in custom_definition.args:
+                ctx.set(arg, 0)
 
-    while pos < len(exp):
-        token, pos = next_token(ctx, exp, pos)
-        if token != [] and token != ['']:
-            tokens.extend(token)
-
-    if custom_definition:
-        ctx.pop_context()
+        while pos < len(exp):
+            token, pos = next_token(ctx, exp, pos)
+            if token != [] and token != ['']:
+                tokens.extend(token)
 
     add_implicit_mul(ctx, tokens)
     return tokens

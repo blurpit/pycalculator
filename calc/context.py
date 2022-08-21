@@ -61,8 +61,11 @@ class Context:
 
     @contextmanager
     def with_context(self):
-        yield self.push_context()
-        self.pop_context()
+        try:
+            self.push_context()
+            yield
+        finally:
+            self.pop_context()
 
     def clear_contexts(self):
         del self.ctx_stack[1:]
