@@ -36,7 +36,7 @@ class FunctionDefinition:
 
     def make_str(self, inputs, bracketed=False):
         if inputs:
-            return '{}({})'.format(self.name, ','.join(map(str, inputs)))
+            return '{}({})'.format(self.name, ', '.join(map(str, inputs)))
         elif self.is_constant:
             return self.name
         else:
