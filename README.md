@@ -263,7 +263,7 @@ calc.evaluate(ctx, 'myfun(f(x)=2x, 0, 100)')
 ```
 
 ### Saving to JSON
-Contexts (minus the root context) can be saved to .json files using `calc.save_contexts()` and loaded using `calc.load_contexts()`.
+Contexts (minus the root context) can be saved to json files using `calc.dump_contexts()` and loaded using `calc.load_contexts()`.
 
 ```py
 ctx = calc.create_default_context()
@@ -274,9 +274,11 @@ ctx.add(calc.evaluate(ctx, 'g(x) = 3/2x^3 + 4x - 1'))
 ctx.push_context()
 ctx.set('foo', 75.24623)
 
-j = calc.save_contexts(ctx)
+# dump_contexts() returns a list of contexts that can be
+# converted to json
+data = calc.dump_contexts(ctx)
 with open('saved_math.json', 'w') as f:
-    f.write(j)
+    f.write(json.dumps(data))
 ```
 ```json
 [{"f": "f(x) = 3*x^2+4", "g": "g(x) = 3/2*x^3+4*x-1"}, {"foo": "75.24623"}]
@@ -287,8 +289,8 @@ ctx = calc.create_default_context()
 # note that a new context is not pushed before loading
 
 with open('saved_math.json') as f:
-    j = f.read()
-calc.load_contexts(ctx, j)
+    data = json.loads(f.read())
+calc.load_contexts(ctx, data)
 calc.evaluate(ctx, 'f(foo), g(foo)')
 > (16989.9853876387, 639365.6665474502)
 ```

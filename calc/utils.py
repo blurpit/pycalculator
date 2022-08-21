@@ -1,4 +1,3 @@
-import json
 import math
 import operator
 import textwrap
@@ -175,14 +174,13 @@ def latex_to_image(tex, dpi=200, color='white', transparent=True):
     )
     return images[0]
 
-def load_contexts(ctx, json_text):
+def load_contexts(ctx, contexts):
     """
-    Load a context stack from json text into an existing context object.
+    Load a context stack from a jsonifiable list of dictionaries into an existing Context object.
     Do not push a new context before loading.
     :param ctx: Starting context
-    :param json_text: JSON text to load
+    :param contexts: List of context dictionaries to load
     """
-    contexts = json.loads(json_text)
     old_ans = ctx.ans
     for element in contexts:
         ctx.push_context()
@@ -194,22 +192,23 @@ def load_contexts(ctx, json_text):
                 ctx.add(result)
     ctx.ans = old_ans
 
-def save_contexts(ctx):
+def dump_contexts(ctx):
     """
-    Convert a context stack into JSON text. Does not include the root context.
-    :param ctx: Context to save
-    :return: JSON string
+    Convert a context stack into a jsonifiable list of dictionaries.
+    Does not include the root context.
+    :param ctx: Context to dump
+    :return: List of context dictionaries
     """
-    result = []
+    contexts = []
     for element in ctx.ctx_stack[1:]:
-        result.append({})
+        contexts.append({})
         for name, item in element.items():
             if isinstance(item, FunctionDefinition):
                 if not isinstance(item.func, CustomFunction):
                     raise TypeError("'{}' is not JSON serializable.".format(item))
                 item = item.func
-            result[-1][name] = str(item)
-    return json.dumps(result)
+            contexts[-1][name] = str(item)
+    return contexts
 
 def is_identifier(name):
     return name.isalpha()
