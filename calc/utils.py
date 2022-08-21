@@ -314,11 +314,11 @@ def fibonacci(n):
 
 def integrate(f, a, b):
     """ Integral from a to b of f(x)dx """
-    return sp.quad(f, a, b)[0]
+    return sp.integrate.quad(f, a, b)[0]
 
 def differentiate(f, x, n=1):
     """ nth derivative of f evaluated at x """
-    return sp.derivative(f, x, dx=1e-4, n=n)
+    return sp.misc.derivative(f, x, dx=1e-4, n=n)
 
 def id_mat(n):
     """ nxn identity matrix """
