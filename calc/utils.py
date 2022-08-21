@@ -51,6 +51,8 @@ def console(ctx:Context):
 
     def cprint(s, col):
         print(col + str(s) + reset)
+    def errprint(exc):
+        cprint('{}: {}'.format(type(exc).__name__, str(exc)), red)
 
     result = None
     ctx.push_context()
@@ -64,8 +66,11 @@ def console(ctx:Context):
             ctx.pop_context()
             ctx.push_context()
         elif exp == 'graph':
-            fig = graph(ctx, result, -10, 10, -10, 10)
-            fig.show()
+            try:
+                fig = graph(ctx, result, -10, 10, -10, 10)
+                fig.show()
+            except Exception as e:
+                errprint(e)
         else:
             try:
                 result = evaluate(ctx, exp)
@@ -73,7 +78,7 @@ def console(ctx:Context):
                     ctx.add(result)
                 cprint(result, bold)
             except Exception as e:
-                cprint('{}: {}'.format(e.__class__.__name__, str(e)), red)
+                errprint(e)
     ctx.pop_context()
 
 def graph(ctx:Context, func, xlow=-10, xhigh=10, ylow=None, yhigh=None, n=1000, tex_title=True):
